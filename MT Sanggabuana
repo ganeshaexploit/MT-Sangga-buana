@@ -1,0 +1,140 @@
+-- ⚡ Brutal Teleport Modern UI (Final Version)
+-- ✅ UI modern toggle
+-- ✅ Teleport loncat instan tapi smooth (TweenService)
+-- ✅ Hotkey [T] untuk toggle
+-- ✅ Auto hold key [E] 3 detik setelah titik terakhir
+-- ✅ Notifikasi Roblox "Auto Summit by Ganesha Exploit"
+
+-- Services
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local VirtualInputManager = game:GetService("VirtualInputManager")
+local TweenService = game:GetService("TweenService")
+local StarterGui = game:GetService("StarterGui")
+
+local player = Players.LocalPlayer
+local char = player.Character or player.CharacterAdded:Wait()
+local hrp = char:WaitForChild("HumanoidRootPart")
+
+-- Teleport Points (update terbaru)
+local points = {
+    Vector3.new(973.80, 9.11, -1013.45),
+    Vector3.new(424.78, 297.50, 183.70),
+    Vector3.new(306.84, 325.19, 874.35),
+    Vector3.new(406.12, 410.00, 2302.68),
+    Vector3.new(1154.76, 609.76, 3168.60),
+    Vector3.new(221.92, 841.10, 3482.83),
+    Vector3.new(270.28, 850.45, 3567.50),
+}
+
+-- Variables
+local teleportEnabled = false
+local teleporting = false
+
+-- UI
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Parent = game.CoreGui
+ScreenGui.ResetOnSpawn = false
+
+local Frame = Instance.new("Frame")
+Frame.Parent = ScreenGui
+Frame.Size = UDim2.new(0, 180, 0, 60)
+Frame.Position = UDim2.new(0.05, 0, 0.1, 0)
+Frame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+Frame.BorderSizePixel = 0
+Frame.Active = true
+Frame.Draggable = true
+
+local FrameCorner = Instance.new("UICorner")
+FrameCorner.CornerRadius = UDim.new(0, 12)
+FrameCorner.Parent = Frame
+
+local ToggleButton = Instance.new("TextButton")
+ToggleButton.Parent = Frame
+ToggleButton.Size = UDim2.new(1, -20, 1, -20)
+ToggleButton.Position = UDim2.new(0, 10, 0, 10)
+ToggleButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+ToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+ToggleButton.TextSize = 16
+ToggleButton.Text = "Teleport [OFF]"
+ToggleButton.Font = Enum.Font.GothamBold
+
+local BtnCorner = Instance.new("UICorner")
+BtnCorner.CornerRadius = UDim.new(0, 10)
+BtnCorner.Parent = ToggleButton
+
+-- Fungsi Teleport Smooth
+local function brutalTeleport()
+    if teleporting then return end
+    teleporting = true
+
+    for i, pos in ipairs(points) do
+        if not teleportEnabled then break end
+
+        -- Tween lompat instan (0.35 detik)
+        local tween = TweenService:Create(
+            hrp,
+            TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+            {CFrame = CFrame.new(pos + Vector3.new(0, 3, 0))}
+        )
+        tween:Play()
+        tween.Completed:Wait()
+
+        -- kalau sudah sampai titik terakhir, hold E 3 detik
+        if i == #points then
+            task.spawn(function()
+                VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.E, false, game)
+                task.wait(3)
+                VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.E, false, game)
+            end)
+        end
+
+        task.wait(0.2) -- jeda kecil antar loncat
+    end
+
+    teleporting = false
+end
+
+-- Toggle Button
+ToggleButton.MouseButton1Click:Connect(function()
+    teleportEnabled = not teleportEnabled
+    ToggleButton.Text = teleportEnabled and "Teleport [ON]" or "Teleport [OFF]"
+    ToggleButton.BackgroundColor3 = teleportEnabled and Color3.fromRGB(60, 150, 60) or Color3.fromRGB(40, 40, 40)
+
+    if teleportEnabled then
+        -- Notifikasi Roblox
+        StarterGui:SetCore("SendNotification", {
+            Title = "Auto Summit",
+            Text = "by Ganesha Exploit",
+            Duration = 5
+        })
+
+        task.spawn(function()
+            while teleportEnabled do
+                brutalTeleport()
+                task.wait(2.5) -- delay antar cycle
+            end
+        end)
+    end
+end)
+
+-- Hotkey [T]
+UserInputService.InputBegan:Connect(function(input, gp)
+    if gp then return end
+    if input.KeyCode == Enum.KeyCode.T then
+        ToggleButton:Activate()
+    end
+end)
+
+-- Update HRP saat respawn
+player.CharacterAdded:Connect(function(newChar)
+    char = newChar
+    hrp = newChar:WaitForChild("HumanoidRootPart")
+end)
+
+-- Notifikasi saat script dijalankan
+StarterGui:SetCore("SendNotification", {
+    Title = "Auto Summit",
+    Text = "by Ganesha Exploit",
+    Duration = 6
+})
